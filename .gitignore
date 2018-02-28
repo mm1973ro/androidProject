@@ -6,4 +6,5 @@
 .DS_Store
 /build
 /captures
+/gradle/wrapper/gradle-wrapper.jar
 .externalNativeBuild
