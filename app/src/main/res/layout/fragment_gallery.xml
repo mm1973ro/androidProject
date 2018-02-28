@@ -8,17 +8,15 @@
     android:orientation="vertical"
     android:gravity="center">
 
+    <Button
+        android:id="@+id/button_preview"
+        android:layout_width="170dp"
+        android:layout_height="70dp"
+        android:text="Preview"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="120dp"
+        tools:layout_editor_absoluteY="212dp"
+        style="@style/Widget.AppCompat.Button.Colored"/>
 
-    <android.support.design.widget.TabLayout
-        android:id="@+id/tabs"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:tabMode="fixed"
-        style="@style/GalleryTabLayout"/>
-
-    <android.support.v4.view.ViewPager
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
 </LinearLayout>
