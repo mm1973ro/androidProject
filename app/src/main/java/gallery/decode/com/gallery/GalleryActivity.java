@@ -1,6 +1,10 @@
 package gallery.decode.com.gallery;
 
 import android.content.Intent;
+import android.support.design.widget.NavigationView;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
@@ -18,10 +22,11 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     public static final String TEXT_PHOTO = "PHOTO";
     public static final String TEXT_VIDEO = "VIDEO";
 
-    private android.support.design.widget.TabLayout mTabs;
-    private android.support.v4.view.ViewPager mPager;
-    private android.support.v7.widget.Toolbar mToolbar;
+    private TabLayout mTabs;
+    private ViewPager mPager;
+    private Toolbar mToolbar;
     private DrawerLayout mDrawer;
+    private NavigationView mNavigation;
 
 
     @Override
@@ -34,8 +39,10 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
         setSupportActionBar(mToolbar);
 
         ActionBar actionbar = getSupportActionBar();
-        actionbar.setDisplayHomeAsUpEnabled(true);
-        actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        if (actionbar != null) {
+            actionbar.setDisplayHomeAsUpEnabled(true);
+            actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
 
         mTabs = findViewById(R.id.tabs);
         mPager = findViewById(R.id.pager);
@@ -73,6 +80,46 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
         mDrawer = findViewById(R.id.drawer_layout);
 
+        mNavigation = findViewById(R.id.drawer_navigation);
+        mNavigation.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem mi) {
+                        // set item as selected to persist highlight
+                        switch (mi.getItemId()) {
+                            case R.id.action_photo:
+                                mPager.setCurrentItem(0);
+                                Toast.makeText(getApplicationContext(),"Photo Selected",Toast.LENGTH_LONG).show();
+//                                mi.setChecked(true);
+//                                mDrawer.closeDrawers();
+                                return true;
+                            case R.id.action_video:
+                                mPager.setCurrentItem(1);
+                                Toast.makeText(getApplicationContext(),"Video Selected",Toast.LENGTH_LONG).show();
+//                                mi.setChecked(true);
+//                                mDrawer.closeDrawers();
+                                return true;
+                            case R.id.action_settings:
+                                Toast.makeText(getApplicationContext(),"Settings Selected",Toast.LENGTH_LONG).show();
+//                                mi.setChecked(true);
+//                                mDrawer.closeDrawers();
+                                return true;
+                            case R.id.action_about:
+                                Toast.makeText(getApplicationContext(),"About Selected",Toast.LENGTH_LONG).show();
+//                                mi.setChecked(true);
+//                                mDrawer.closeDrawers();
+                                return true;
+                        }
+
+                        mi.setChecked(true);
+                        mDrawer.closeDrawers();
+
+                        // Code to update the UI based on the item selected
+
+                        return true;
+                    }
+                });
+
     }
 
     @Override
@@ -90,9 +137,11 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
                 mDrawer.openDrawer(GravityCompat.START);
                 return true;
             case R.id.action_photo:
+                mPager.setCurrentItem(0);
                 Toast.makeText(getApplicationContext(),"Photo Selected",Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_video:
+                mPager.setCurrentItem(1);
                 Toast.makeText(getApplicationContext(),"Video Selected",Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_settings:

@@ -16,13 +16,13 @@ public class PreviewActivity extends AppCompatActivity  implements View.OnClickL
         setContentView(R.layout.activity_preview);
         setTitle("Preview");
 
-        mBack0Button = (Button) findViewById(R.id.button_back0);
+        mBack0Button = findViewById(R.id.button_back0);
         mBack0Button.setOnClickListener(this);
 
-        mBack1Button = (Button) findViewById(R.id.button_back1);
+        mBack1Button = findViewById(R.id.button_back1);
         mBack1Button.setOnClickListener(this);
 
-        mBack2Button = (Button) findViewById(R.id.button_back2);
+        mBack2Button = findViewById(R.id.button_back2);
         mBack2Button.setOnClickListener(this);
 
     }

@@ -17,7 +17,7 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
 
     interface ICallback { void preview(int type);}
 
-    //private Button mPreviewButton;
+    private Button mPreviewButton;
     private int mType = 0;
 
     @Nullable
@@ -25,13 +25,13 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_gallery,
                 container, false);
-        //mPreviewButton = root.findViewById(R.id.button_preview);
-        //mPreviewButton.setOnClickListener(this);
+        mPreviewButton = root.findViewById(R.id.button_preview);
+        mPreviewButton.setOnClickListener(this);
 
         mType = getArguments() != null ?
                 getArguments().getInt("type", 0) : 0;
 
-        //mPreviewButton.setText("Preview" + mType);
+        mPreviewButton.setText("Preview" + mType);
 
 
         return root;
