@@ -32,13 +32,28 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_gallery);
         setTitle("Gallery");
 
         mToolbar = findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
-        ActionBar actionbar = getSupportActionBar();
+        mDrawer = findViewById(R.id.drawer_layout);
+        mNavigation = findViewById(R.id.drawer_navigation);
+        mNavigation.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem mi) {
+                        mi.setChecked(true);
+                        mDrawer.closeDrawers();
+                        onOptionsItemSelected(mi);
+                        return true;
+                    }
+                }
+        );
+
+        final ActionBar actionbar = getSupportActionBar();
         if (actionbar != null) {
             actionbar.setDisplayHomeAsUpEnabled(true);
             actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
@@ -78,48 +93,6 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
         mTabs.setupWithViewPager(mPager);
 
-        mDrawer = findViewById(R.id.drawer_layout);
-
-        mNavigation = findViewById(R.id.drawer_navigation);
-        mNavigation.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(MenuItem mi) {
-                        // set item as selected to persist highlight
-                        switch (mi.getItemId()) {
-                            case R.id.action_photo:
-                                mPager.setCurrentItem(0);
-                                Toast.makeText(getApplicationContext(),"Photo Selected",Toast.LENGTH_LONG).show();
-//                                mi.setChecked(true);
-//                                mDrawer.closeDrawers();
-                                return true;
-                            case R.id.action_video:
-                                mPager.setCurrentItem(1);
-                                Toast.makeText(getApplicationContext(),"Video Selected",Toast.LENGTH_LONG).show();
-//                                mi.setChecked(true);
-//                                mDrawer.closeDrawers();
-                                return true;
-                            case R.id.action_settings:
-                                Toast.makeText(getApplicationContext(),"Settings Selected",Toast.LENGTH_LONG).show();
-//                                mi.setChecked(true);
-//                                mDrawer.closeDrawers();
-                                return true;
-                            case R.id.action_about:
-                                Toast.makeText(getApplicationContext(),"About Selected",Toast.LENGTH_LONG).show();
-//                                mi.setChecked(true);
-//                                mDrawer.closeDrawers();
-                                return true;
-                        }
-
-                        mi.setChecked(true);
-                        mDrawer.closeDrawers();
-
-                        // Code to update the UI based on the item selected
-
-                        return true;
-                    }
-                });
-
     }
 
     @Override
@@ -138,17 +111,17 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
                 return true;
             case R.id.action_photo:
                 mPager.setCurrentItem(0);
-                Toast.makeText(getApplicationContext(),"Photo Selected",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Photo Selected", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_video:
                 mPager.setCurrentItem(1);
-                Toast.makeText(getApplicationContext(),"Video Selected",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Video Selected", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_settings:
-                Toast.makeText(getApplicationContext(),"Settings Selected",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "Settings Selected", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.action_about:
-                Toast.makeText(getApplicationContext(),"About Selected",Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), "About Selected", Toast.LENGTH_LONG).show();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -175,8 +148,10 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     }
 
     @Override
-    public void preview(int type) {
+    public void preview(Media media) {
         Intent intent = new Intent(this, PreviewActivity.class);
+        intent.putExtra("color", media.getColor());
+        intent.putExtra("text", media.getName());
         startActivityForResult(intent, PREVIEW_REQUEST_TYPE);
     }
 }
