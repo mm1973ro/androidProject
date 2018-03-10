@@ -1,8 +1,14 @@
 package gallery.decode.com.gallery;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.support.v4.app.Fragment;
@@ -14,20 +20,29 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class GalleryActivity extends AppCompatActivity implements GalleryFragment.ICallback {
 
     public static final int PREVIEW_REQUEST_TYPE = 1;
-    public static final String TEXT_PHOTO = "PHOTO";
-    public static final String TEXT_VIDEO = "VIDEO";
+    static final int REQUEST_TAKE_PHOTO = 2;
+    public static final String[] TABS = {"PHOTO", "VIDEO"};
+    static final String AUTHORITIES_NAME = "gallery.decode.com.gallery.fileprovider";
 
     private TabLayout mTabs;
     private ViewPager mPager;
     private Toolbar mToolbar;
     private DrawerLayout mDrawer;
     private NavigationView mNavigation;
-
+    private ImageView mImage;
+    private FloatingActionButton mCamera;
+    private File photoFile = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +74,8 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
             actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
         }
 
-        mTabs = findViewById(R.id.tabs);
+        // fragment
         mPager = findViewById(R.id.pager);
-
         mPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -76,22 +90,34 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
             @Override
             public CharSequence getPageTitle(int position) {
-
-                if (position == 0) {
-                    return TEXT_PHOTO;
-                } else {
-                    return TEXT_VIDEO;
-                }
-
+                return TABS[position];
             }
 
             @Override
             public int getCount() {
-                return 2;
+                return TABS.length;
             }
         });
 
+        // tabs
+        mTabs = findViewById(R.id.tabs);
         mTabs.setupWithViewPager(mPager);
+
+        // camera
+        mImage = findViewById(R.id.camera_image);
+        mImage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setResult(1);
+            }
+        });
+
+        mCamera = findViewById(R.id.myFAB);
+        mCamera.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Camera Selected", Toast.LENGTH_LONG).show();
+                dispatchTakePictureIntent();
+            }
+        });
 
     }
 
@@ -136,6 +162,20 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
             mPager.setCurrentItem(resultCode - 1);
             //refresh();
         }
+        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+            Uri uri = Uri.fromFile(photoFile);
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), uri);
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            mImage.setImageBitmap(bitmap);
+        }
     }
 
     @Override
@@ -145,6 +185,44 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     }
 
     private void refresh() {
+    }
+
+    private void dispatchTakePictureIntent() {
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            try {
+                photoFile = createImageFile();
+            } catch (IOException e) {
+                // Error occurred while creating the File
+                e.printStackTrace();
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        AUTHORITIES_NAME,
+                        photoFile);
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
+        }
+    }
+
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        Long tsLong = System.currentTimeMillis() / 1000;
+        String timeStamp = tsLong.toString();
+        String imageFileName = "JPEG_" + timeStamp + "_";
+
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+        return image;
     }
 
     @Override

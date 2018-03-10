@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <files-path
+        name="internal_images"
+        path="DCIM/Camera/" />
+    <external-path
+        name="external_images"
+        path="Android/data/gallery.decode.com.gallery/files/Pictures/" />
+    <cache-path
+        name="cache_images"
+        path="DCIM/Camera/cache/" />
+</paths>
