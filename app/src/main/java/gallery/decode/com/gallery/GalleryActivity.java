@@ -228,8 +228,7 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     @Override
     public void preview(Media media) {
         Intent intent = new Intent(this, PreviewActivity.class);
-        intent.putExtra("color", media.getColor());
-        intent.putExtra("text", media.getName());
+        //intent.putExtra("text", media.getName());
         startActivityForResult(intent, PREVIEW_REQUEST_TYPE);
     }
 }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<gallery.decode.com.gallery.SquareRelativeLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/item_media"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="128dp">
 
     <ImageView
         android:layout_width="match_parent"
@@ -17,4 +17,4 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-</gallery.decode.com.gallery.SquareRelativeLayout>
+</RelativeLayout>
