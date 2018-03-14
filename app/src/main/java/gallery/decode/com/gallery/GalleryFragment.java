@@ -1,12 +1,15 @@
 package gallery.decode.com.gallery;
 
-//import android.content.CursorLoader;
-import android.database.Cursor;
-//import android.net.Uri;
+import android.Manifest;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
-//import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -14,10 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+
+import static gallery.decode.com.gallery.GalleryActivity.REQUEST_PERMISSIONS_CODE_WRITE_STORAGE;
 
 
 /**
@@ -26,11 +32,14 @@ import java.util.List;
 
 public class GalleryFragment extends Fragment implements View.OnClickListener {
 
-    public interface ICallback { void preview(Media media);}
+    private static final String PERMISSION_SHARED_PREFERENCES = "test";
+
+    public interface ICallback {
+        void preview(Media media);
+    }
 
     private RecyclerView mRecyclerView;
     private int mType = 0;
-    //private Cursor mMediaCursor;
 
 
     @Nullable
@@ -44,8 +53,7 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
         mType = getArguments() != null ?
                 getArguments().getInt("type", 0) : 0;
 
-        mRecyclerView.setAdapter(new Adapter(mType));
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), getResources().getInteger(R.integer.galleryColumnsCount)));
+        loadMedia();
 
         return root;
     }
@@ -59,23 +67,41 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
             ((ICallback) getActivity()).preview((Media) view.getTag());
     }
 
-//    private void loadMediaCursor() {
-//        if (mMediaCursor != null && !mMediaCursor.isClosed())
-//            mMediaCursor.close();
-//
-//            // Get relevant columns for use later.
-//            String[] projection = {
-//                MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.DATA, MediaStore.Files.FileColumns.DATE_ADDED,
-//                MediaStore.Files.FileColumns.MEDIA_TYPE, MediaStore.Files.FileColumns.MIME_TYPE, MediaStore.Files.FileColumns.TITLE,
-//                MediaStore.Video.Media.DURATION};
-//
-//            // Return only video and image metadata.
-//            String selection = MediaStore.Files.FileColumns.MEDIA_TYPE + "=" + (mType == Media.TYPE_IMAGE ? MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE : MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO);
-//            Uri queryUri = MediaStore.Files.getContentUri("external");
-//
-//            CursorLoader cursorLoader = new CursorLoader(getContext(), queryUri, projection, selection, null, MediaStore.Files.FileColumns.DATE_ADDED + " DESC");
-//            mMediaCursor = cursorLoader.loadInBackground();
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+//        if (requestCode == REQUEST_PERMISSIONS_CODE_WRITE_STORAGE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//            mRecyclerView.setAdapter(new Adapter(mType));
+//            mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), getResources().getInteger(R.integer.galleryColumnsCount)));
 //        }
+//    }
+
+    private void loadMedia () {
+        String permission = Manifest.permission.READ_EXTERNAL_STORAGE;
+        FragmentActivity activity = getActivity();
+
+        if (ContextCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+            SharedPreferences prefs = activity.getSharedPreferences(
+                    PERMISSION_SHARED_PREFERENCES, Context.MODE_PRIVATE);
+            boolean wasRequested = prefs.getBoolean("requested_" + permission, false);
+
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permission)) {
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_PERMISSIONS_CODE_WRITE_STORAGE);
+            } else if (!wasRequested) {
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean("requested_" + permission, true);
+                editor.commit();
+
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        REQUEST_PERMISSIONS_CODE_WRITE_STORAGE);
+            }
+        } else {
+            mRecyclerView.setAdapter(new Adapter(mType));
+            mRecyclerView.setLayoutManager(new GridLayoutManager(getContext(), getResources().getInteger(R.integer.galleryColumnsCount)));
+        }
+    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
@@ -119,6 +145,5 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
             return mMedia.size();
         }
     }
-
 
 }

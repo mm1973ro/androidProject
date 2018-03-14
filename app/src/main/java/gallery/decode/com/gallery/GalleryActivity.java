@@ -1,6 +1,7 @@
 package gallery.decode.com.gallery;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
@@ -34,6 +35,7 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     static final int REQUEST_TAKE_PHOTO = 2;
     public static final String[] TABS = {"PHOTO", "VIDEO"};
     static final String AUTHORITIES_NAME = "gallery.decode.com.gallery.fileprovider";
+    public static final int REQUEST_PERMISSIONS_CODE_WRITE_STORAGE = 3;
 
     private TabLayout mTabs;
     private ViewPager mPager;
@@ -76,6 +78,31 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
         // fragment
         mPager = findViewById(R.id.pager);
+        loadFragment();
+
+        // tabs
+        mTabs = findViewById(R.id.tabs);
+        mTabs.setupWithViewPager(mPager);
+
+        // camera
+        mImage = findViewById(R.id.camera_image);
+        mImage.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                setResult(1);
+            }
+        });
+
+        mCamera = findViewById(R.id.myFAB);
+        mCamera.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(), "Camera Selected", Toast.LENGTH_LONG).show();
+                dispatchTakePictureIntent();
+            }
+        });
+
+    }
+
+    private void loadFragment() {
         mPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
@@ -98,27 +125,13 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
                 return TABS.length;
             }
         });
+    }
 
-        // tabs
-        mTabs = findViewById(R.id.tabs);
-        mTabs.setupWithViewPager(mPager);
-
-        // camera
-        mImage = findViewById(R.id.camera_image);
-        mImage.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                setResult(1);
-            }
-        });
-
-        mCamera = findViewById(R.id.myFAB);
-        mCamera.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Camera Selected", Toast.LENGTH_LONG).show();
-                dispatchTakePictureIntent();
-            }
-        });
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == REQUEST_PERMISSIONS_CODE_WRITE_STORAGE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            loadFragment();
+        }
     }
 
     @Override
