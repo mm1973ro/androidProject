@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.CursorLoader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.provider.MediaStore;
 
 import java.util.ArrayList;
@@ -13,21 +15,40 @@ import java.util.List;
  * Created by lucian.cioroga on 3/7/2018.
  */
 
-public class Media {
+public class Media implements Parcelable {
     public static final int TYPE_IMAGE = 0;
     public static final int TYPE_VIDEO = 1;
 
     private String mName;
     private int mType;
-    private Long mDuration;
+    private long mDuration;
     private String mUrl;
 
-    public Media(int type, String name, Long duration, String url) {
+    public Media(int type, String name, long duration, String url) {
         mType = type;
         mName = name;
         mDuration = duration;
         mUrl = url;
     }
+
+    protected Media(Parcel in) {
+        mName = in.readString();
+        mType = in.readInt();
+        mDuration = in.readLong();
+        mUrl = in.readString();
+    }
+
+    public static final Creator<Media> CREATOR = new Creator<Media>() {
+        @Override
+        public Media createFromParcel(Parcel in) {
+            return new Media(in);
+        }
+
+        @Override
+        public Media[] newArray(int size) {
+            return new Media[size];
+        }
+    };
 
     public String getName() {
         return mName;
@@ -73,9 +94,21 @@ public class Media {
 
         cursor.close();
 
-        return  media;
+        return media;
 
     }
 
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(mName);
+        parcel.writeInt(mType);
+        parcel.writeLong(mDuration);
+        parcel.writeString(mUrl);
+    }
 }

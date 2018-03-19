@@ -1,5 +1,7 @@
 package gallery.decode.com.gallery;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -19,9 +21,11 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.transition.Explode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -45,10 +49,12 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     private ImageView mImage;
     private FloatingActionButton mCamera;
     private File photoFile = null;
+    private ImageView sharedElementView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
         setContentView(R.layout.activity_gallery);
         setTitle("Gallery");
@@ -238,10 +244,13 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
         return image;
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void preview(Media media) {
         Intent intent = new Intent(this, PreviewActivity.class);
-        //intent.putExtra("text", media.getName());
-        startActivityForResult(intent, PREVIEW_REQUEST_TYPE);
+        sharedElementView = findViewById(R.id.thumb);
+        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, sharedElementView, "thumbnail");
+        intent.putExtra("media", media);
+        startActivityForResult(intent, PREVIEW_REQUEST_TYPE, options.toBundle());
     }
 }

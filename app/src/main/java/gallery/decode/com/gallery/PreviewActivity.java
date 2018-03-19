@@ -3,31 +3,48 @@ package gallery.decode.com.gallery;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
+import android.view.ViewTreeObserver;
+import android.view.Window;
+import android.widget.ImageView;
+
+import com.squareup.picasso.Picasso;
 
 
-public class PreviewActivity extends AppCompatActivity  implements View.OnClickListener {
+public class PreviewActivity extends AppCompatActivity {
+
+    private Media mMedia;
+    private ImageView mThumb;
+    private Picasso mThumbs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+
         setContentView(R.layout.activity_preview);
-        SquareRelativeLayout mSquare = findViewById(R.id.preview_media);
-        mSquare.setBackgroundColor(getIntent().getIntExtra("color", 0));
-        TextView mText = findViewById(R.id.preview_text);
-        mText.setText(getIntent().getStringExtra("text"));
+        supportPostponeEnterTransition();
 
-        mSquare.setOnClickListener(this);
+        mThumb = findViewById(R.id.thumb);
+
+        mThumbs = new Picasso.Builder(this).addRequestHandler(new VideoRequestHandler()).build();
+
+        mMedia = getIntent().getParcelableExtra("media");
+
+        mThumbs.load((mMedia.getType() == Media.TYPE_IMAGE ? "file://" : "video:") +
+                mMedia.getUrl()).fit().centerInside().into(mThumb);
+
     }
 
-    @Override
-    public void onClick(View view) {
-
-        if (view.getId() == R.id.preview_media) {
-            setResult(1);
-        }
-
-        finish();
+    private void scheduleStartPostponedTransition(final View sharedElement) {
+        sharedElement.getViewTreeObserver().addOnPreDrawListener(
+                new ViewTreeObserver.OnPreDrawListener() {
+                    @Override
+                    public boolean onPreDraw() {
+                        sharedElement.getViewTreeObserver().removeOnPreDrawListener(this);
+                        startPostponedEnterTransition();
+                        return true;
+                    }
+                });
     }
+
 }
