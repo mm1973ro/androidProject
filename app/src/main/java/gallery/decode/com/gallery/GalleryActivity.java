@@ -3,6 +3,7 @@ package gallery.decode.com.gallery;
 import android.annotation.SuppressLint;
 import android.app.ActivityOptions;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -21,7 +22,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.transition.Explode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,17 +29,26 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import io.fabric.sdk.android.Fabric;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.util.HashMap;
 
-public class GalleryActivity extends AppCompatActivity implements GalleryFragment.ICallback {
+public class GalleryActivity extends AppCompatActivity implements GalleryFragment.IGallery {
 
     public static final int PREVIEW_REQUEST_TYPE = 1;
     static final int REQUEST_TAKE_PHOTO = 2;
     public static final String[] TABS = {"PHOTO", "VIDEO"};
     static final String AUTHORITIES_NAME = "gallery.decode.com.gallery.fileprovider";
     public static final int REQUEST_PERMISSIONS_CODE_WRITE_STORAGE = 3;
+    private static final String PREFERENCES_VISITS = "pref-visits";
 
     private TabLayout mTabs;
     private ViewPager mPager;
@@ -50,10 +59,13 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     private FloatingActionButton mCamera;
     private File photoFile = null;
     private ImageView sharedElementView;
+    private Gson mGson;
+    private HashMap<String, Integer> mVisits;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Fabric.with(this, new Crashlytics());
         getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
 
         setContentView(R.layout.activity_gallery);
@@ -106,6 +118,20 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
             }
         });
 
+//        mGson = new Gson();
+        mVisits = new HashMap<String, Integer>();
+
+//        if (savedInstanceState != null) {
+//            mVisits = ((HashMap<String, Integer>) savedInstanceState.getSerializable("visits"));
+//        } else {
+//            SharedPreferences prefs = getSharedPreferences(PREFERENCES_VISITS, MODE_PRIVATE);
+//            try {
+//                mVisits = mGson.fromJson(prefs.getString("visits", ""), new TypeToken<HashMap<String, Integer>>() {
+//                }.getType());
+//            } catch (Exception e) {
+//            }
+//        }
+
     }
 
     private void loadFragment() {
@@ -135,7 +161,8 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQUEST_PERMISSIONS_CODE_WRITE_STORAGE && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == REQUEST_PERMISSIONS_CODE_WRITE_STORAGE && grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             loadFragment();
         }
     }
@@ -176,10 +203,12 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PREVIEW_REQUEST_TYPE) {
-//            mResultValue = resultCode;
-            mPager.setCurrentItem(resultCode - 1);
-            //refresh();
+        if (requestCode == PREVIEW_REQUEST_TYPE && resultCode == RESULT_OK) {
+            Media media = data.getParcelableExtra("media");
+            int v = mVisits.containsKey(media.getUrl()) ? mVisits.get(media.getUrl()) : 0;
+            mVisits.put(media.getUrl(), v + 1);
+            for (Fragment f : getSupportFragmentManager().getFragments())
+                f.onActivityResult(requestCode, resultCode, data);
         }
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
             Uri uri = Uri.fromFile(photoFile);
@@ -200,7 +229,7 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-//        outState.putInt("result", mResultValue);
+        outState.putSerializable("visits", mVisits);
     }
 
     private void refresh() {
@@ -246,11 +275,22 @@ public class GalleryActivity extends AppCompatActivity implements GalleryFragmen
 
     @SuppressLint("RestrictedApi")
     @Override
-    public void preview(Media media) {
+    public void preview(View sharedElement, Media media) {
         Intent intent = new Intent(this, PreviewActivity.class);
-        sharedElementView = findViewById(R.id.thumb);
+        sharedElementView = sharedElement.findViewById(R.id.thumb);
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, sharedElementView, "thumbnail");
         intent.putExtra("media", media);
         startActivityForResult(intent, PREVIEW_REQUEST_TYPE, options.toBundle());
     }
+
+    @Override
+    public View getRoot() {
+        return mDrawer;
+    }
+
+    @Override
+    public int getVisits(Media media) {
+        return mVisits.containsKey(media.getUrl()) ? mVisits.get(media.getUrl()) : 0;
+    }
+
 }

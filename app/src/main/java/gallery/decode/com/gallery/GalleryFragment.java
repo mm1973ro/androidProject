@@ -1,7 +1,9 @@
 package gallery.decode.com.gallery;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -33,12 +35,29 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
 
     private static final String PERMISSION_SHARED_PREFERENCES = "test";
 
-    public interface ICallback {
-        void preview(Media media);
-    }
-
     private RecyclerView mRecyclerView;
     private int mType = 0;
+
+    private IGallery root() {
+        if (getActivity() instanceof IGallery && !getActivity().isFinishing() && !getActivity().isDestroyed())
+            return (IGallery) getActivity();
+        else
+            return new IGallery() {
+                @Override
+                public void preview(View sharedElement, Media media) {
+                }
+
+                @Override
+                public View getRoot() {
+                    return null;
+                }
+
+                @Override
+                public int getVisits(Media media) {
+                    return 0;
+                }
+            };
+    }
 
 
     @Nullable
@@ -60,10 +79,10 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View view){
         if (view.getTag() instanceof Media)
-        if (getActivity() instanceof ICallback
+        if (getActivity() instanceof IGallery
                 && !getActivity().isDestroyed()
                 && !getActivity().isFinishing())
-            ((ICallback) getActivity()).preview((Media) view.getTag());
+            root().preview(view, (Media) view.getTag());
     }
 
 //    @Override
@@ -106,10 +125,13 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
         // each data item is just a string in this case
         public TextView mLabel;
         private ImageView mThumb;
+        private TextView mVisits;
+
         public ViewHolder(View v) {
             super(v);
             mLabel = v.findViewById(R.id.grid_text);
             mThumb = itemView.findViewById(R.id.thumb);
+            mVisits = itemView.findViewById(R.id.visits);
         }
     }
 
@@ -133,16 +155,36 @@ public class GalleryFragment extends Fragment implements View.OnClickListener {
 
         @Override
         public void onBindViewHolder(ViewHolder vh, int position) {
+            Media media = mMedia.get(position);
+
             vh.mLabel.setText(U.format(mMedia.get(position).getDuration()));
             vh.itemView.setTag(mMedia.get(position));
             vh.itemView.setOnClickListener(GalleryFragment.this);
-            mThumbs.load((mType == Media.TYPE_IMAGE ? "file://" : "video:") + mMedia.get(position).getUrl()).fit().centerInside().into(vh.mThumb);
+            mThumbs.load((mType == Media.TYPE_IMAGE ? "file://" : "video:") +
+                    mMedia.get(position).getUrl()).fit().centerInside().into(vh.mThumb);
+
+            vh.mVisits.setVisibility(root().getVisits(media) > 0 ? View.VISIBLE : View.GONE);
+            vh.mVisits.setText("" + root().getVisits(media));
         }
 
         @Override
         public int getItemCount() {
             return mMedia.size();
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == GalleryActivity.PREVIEW_REQUEST_TYPE && resultCode == Activity.RESULT_OK)
+            mRecyclerView.getAdapter().notifyDataSetChanged();
+    }
+
+    public interface IGallery {
+        void preview(View sharedElement, Media media);
+
+        View getRoot();
+
+        int getVisits(Media media);
     }
 
 }
